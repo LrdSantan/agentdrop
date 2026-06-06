@@ -29,7 +29,7 @@ function App() {
   const [hasPermission, setHasPermission] = useState(false)
   const [_permissionContext, setPermissionContext] = useState<string | null>(null)
 
-  const grantPermission = async () => {
+ /* const grantPermission = async () => {
     try {
       const result = await (window as any).ethereum?.request({
         method: 'wallet_grantPermissions',
@@ -52,7 +52,7 @@ function App() {
       console.error('Permission error:', error)
       alert('Permission request failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
-  }
+  } */
 
   const generateAndMint = async () => {
     if (!theme.trim() || !addressesInput.trim()) {
@@ -154,27 +154,15 @@ function App() {
 
       {isConnected ? (
         <div style={styles.content}>
-          <div style={styles.walletSection}>
-            <div style={styles.walletInfo}>
-              <span style={styles.label}>Connected wallet</span>
-              <code style={styles.address}>{address}</code>
-            </div>
-            <div style={{display: 'flex', gap: '8px'}}>
-              {!hasPermission && (
-                <button onClick={grantPermission} style={styles.buttonPrimary}>
-                  Grant permission
-                </button>
-              )}
-              {hasPermission && (
-                <span style={{padding: '8px 16px', fontSize: '13px', color: '#666', alignSelf: 'center'}}>
-                  Permission granted
-                </span>
-              )}
-              <button onClick={() => disconnect()} style={styles.buttonSecondary}>
-                Disconnect
-              </button>
-            </div>
-          </div>
+         <div style={styles.walletSection}>
+  <div style={styles.walletInfo}>
+    <span style={styles.label}>Connected wallet</span>
+    <code style={styles.address}>{address}</code>
+  </div>
+  <button onClick={() => disconnect()} style={styles.buttonSecondary}>
+    Disconnect
+  </button>
+</div>
 
           <div style={styles.formSection}>
             <div style={styles.formGroup}>
