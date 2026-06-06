@@ -26,33 +26,6 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [minted, setMinted] = useState<Array<{ address: string; tokenId: number; uri: string }>>([])
   const { writeContractAsync } = useWriteContract()
-  const [hasPermission, setHasPermission] = useState(false)
-  const [_permissionContext, setPermissionContext] = useState<string | null>(null)
-
- /* const grantPermission = async () => {
-    try {
-      const result = await (window as any).ethereum?.request({
-        method: 'wallet_grantPermissions',
-        params: [{
-          permissions: [{
-            type: 'native-token-transfer',
-            data: { allowance: '1000000000000000000' }
-          }],
-          expiry: Math.floor(Date.now() / 1000) + 3600
-        }]
-      })
-      
-      if (result?.permissions) {
-        setHasPermission(true)
-        setPermissionContext(JSON.stringify(result.permissions)) // store for later delegation
-        console.log('Permission granted:', result.permissions)
-        alert('Permission granted! You can now mint without signing each transaction.')
-      }
-    } catch (error) {
-      console.error('Permission error:', error)
-      alert('Permission request failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    }
-  } */
 
   const generateAndMint = async () => {
     if (!theme.trim() || !addressesInput.trim()) {
@@ -154,15 +127,15 @@ function App() {
 
       {isConnected ? (
         <div style={styles.content}>
-         <div style={styles.walletSection}>
-  <div style={styles.walletInfo}>
-    <span style={styles.label}>Connected wallet</span>
-    <code style={styles.address}>{address}</code>
-  </div>
-  <button onClick={() => disconnect()} style={styles.buttonSecondary}>
-    Disconnect
-  </button>
-</div>
+          <div style={styles.walletSection}>
+            <div style={styles.walletInfo}>
+              <span style={styles.label}>Connected wallet</span>
+              <code style={styles.address}>{address}</code>
+            </div>
+            <button onClick={() => disconnect()} style={styles.buttonSecondary}>
+              Disconnect
+            </button>
+          </div>
 
           <div style={styles.formSection}>
             <div style={styles.formGroup}>
