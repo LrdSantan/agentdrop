@@ -27,7 +27,7 @@ function App() {
   const [minted, setMinted] = useState<Array<{ address: string; tokenId: number; uri: string }>>([])
   const { writeContractAsync } = useWriteContract()
   const [hasPermission, setHasPermission] = useState(false)
-  const [permissionContext, setPermissionContext] = useState<string | null>(null)
+  const [_permissionContext, setPermissionContext] = useState<string | null>(null)
 
   const grantPermission = async () => {
     try {
@@ -44,7 +44,7 @@ function App() {
       
       if (result?.permissions) {
         setHasPermission(true)
-        setPermissionContext(JSON.stringify(result.permissions))
+        setPermissionContext(JSON.stringify(result.permissions)) // store for later delegation
         console.log('Permission granted:', result.permissions)
         alert('Permission granted! You can now mint without signing each transaction.')
       }
