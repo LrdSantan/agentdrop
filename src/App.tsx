@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 import { NFTStorage } from 'nft.storage'
 import { useWriteContract } from 'wagmi'
@@ -21,6 +21,7 @@ function App() {
   const { address, isConnected } = useAccount()
   const { connect } = useConnect()
   const { disconnect } = useDisconnect()
+  const { switchChainAsync } = useSwitchChain()
   const [theme, setTheme] = useState('')
   const [addressesInput, setAddressesInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -93,11 +94,15 @@ function App() {
         uris.push(`ipfs://${metadataCID}`)
       }
 
+      console.log('Switching to Base Sepolia...')
+      await switchChainAsync({ chainId: 84532 })
+
       console.log('Calling batchMint with', addresses.length, 'addresses')
       await writeContractAsync({
         address: import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`,
         abi: CONTRACT_ABI,
         functionName: 'batchMint',
+        chainId: 84532,
         args: [addresses as `0x${string}`[], uris],
       })
 
