@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
 import { injected } from 'wagmi/connectors'
-import { NFTStorage } from 'nft.storage'
 import { useWriteContract } from 'wagmi'
 
 const CONTRACT_ABI = [
@@ -46,13 +45,30 @@ function App() {
 
     setLoading(true)
     try {
-      const nftStorage = new NFTStorage({ token: import.meta.env.VITE_NFT_STORAGE_KEY || '' })
+      const pinataJWT = import.meta.env.VITE_PINATA_JWT
+
+      const pinBlob = async (blob: Blob, filename: string): Promise<string> => {
+        const formData = new FormData()
+        formData.append('file', blob, filename)
+        const pinRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${pinataJWT}` },
+          body: formData,
+        })
+        if (!pinRes.ok) {
+          const err = await pinRes.text()
+          throw new Error(`Pinata upload failed: ${err}`)
+        }
+        const pinData = await pinRes.json() as { IpfsHash: string }
+        return pinData.IpfsHash
+      }
+
       const uris: string[] = []
 
       for (let i = 0; i < addresses.length; i++) {
         console.log(`Generating image ${i + 1}/${addresses.length}...`)
-        
-        const res = await fetch('https://api.venice.ai/api/v1/image/generate', {
+
+        const res = await fetch('/venice/api/v1/image/generate', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_VENICE_API_KEY}`,
@@ -67,21 +83,20 @@ function App() {
         })
 
         if (!res.ok) {
-          console.warn(`Venice failed for ${addresses[i]}, using mock`)
-          uris.push('ipfs://QmMockImageCID' + i)
-          continue
+          const errText = await res.text()
+          throw new Error(`Venice API error for ${addresses[i]}: ${errText}`)
         }
 
-        const data = await res.json() as { images?: Array<{ data: string }> }
-        
+        const data = await res.json() as { images?: string[] }
+
         if (!data.images || !data.images[0]) {
-          uris.push('ipfs://QmMockImageCID' + i)
-          continue
+          throw new Error(`Venice returned no image for address ${addresses[i]}`)
         }
 
-        const base64 = data.images[0].data
-        const blob = await fetch(`data:image/png;base64,${base64}`).then(r => r.blob())
-        const imageCID = await nftStorage.storeBlob(blob)
+        const base64 = data.images[0]
+        const blob = await fetch(`data:image/webp;base64,${base64}`).then(r => r.blob())
+        const imageCID = await pinBlob(blob, `image-${i}.webp`)
+        console.log(`Image ${i + 1} pinned: ipfs://${imageCID}`)
 
         const metadata = {
           name: `${theme} #${i + 1}`,
@@ -90,7 +105,8 @@ function App() {
         }
 
         const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-        const metadataCID = await nftStorage.storeBlob(metadataBlob)
+        const metadataCID = await pinBlob(metadataBlob, `metadata-${i}.json`)
+        console.log(`Metadata ${i + 1} pinned: ipfs://${metadataCID}`)
         uris.push(`ipfs://${metadataCID}`)
       }
 
@@ -104,7 +120,17 @@ function App() {
         functionName: 'batchMint',
         chainId: 84532,
         args: [addresses as `0x${string}`[], uris],
+        maxFeePerGas: BigInt(1500000000),
+        maxPriorityFeePerGas: BigInt(1500000000),
       })
+      await writeContractAsync({
+  address: import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`,
+  abi: CONTRACT_ABI,
+  functionName: 'batchMint',
+  chainId: 84532,
+  args: [addresses as `0x${string}`[], uris],
+  gas: BigInt(100000),
+})
 
       const newMints = addresses.map((addr, i) => ({
         address: addr,
@@ -124,7 +150,7 @@ function App() {
   return (
     <div style={styles.container}>
       <style>{globalStyles}</style>
-      
+
       <div style={styles.header}>
         <h1 style={styles.title}>AgentDrop</h1>
         <p style={styles.subtitle}>AI art minting agent</p>

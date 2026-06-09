@@ -9,7 +9,7 @@ import './index.css'
 const config = createConfig({
   chains: [baseSepolia],
   transports: {
-    [baseSepolia.id]: http(),
+    [baseSepolia.id]: http('https://base-sepolia.g.alchemy.com/v2/demo'),
   },
 })
 
