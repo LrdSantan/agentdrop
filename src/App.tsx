@@ -68,7 +68,7 @@ function App() {
       for (let i = 0; i < addresses.length; i++) {
         console.log(`Generating image ${i + 1}/${addresses.length}...`)
 
-        const res = await fetch('/venice/api/v1/image/generate', {
+        const res = await fetch('/api/venice', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_VENICE_API_KEY}`,
